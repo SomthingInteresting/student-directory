@@ -1,23 +1,5 @@
 @students = [] # an empty array accessible to all methods
 
-def input_students
-  puts "Please enter the name of the students"
-  puts "To finish, just hit return twice"
-  name = gets.chomp
-  while !name.empty? do
-    @students << {name: name, cohort: :november}
-    puts "Now we have #{@students.count} students"
-    name = gets.chomp
-  end
-end
-
-def interactive_menu
-  loop do
-    print_menu
-    process(gets.chomp)
-  end
-end
-
 def print_menu
   puts "1. Input the students"
   puts "2. Show the students"
@@ -26,10 +8,11 @@ def print_menu
   puts "9. Exit"
 end
 
-def show_students
-  print_header
-  print_students_list
-  print_footer
+def interactive_menu
+  loop do
+    print_menu
+    process(STDIN.gets.chomp)
+  end
 end
 
 def process(selection)
@@ -41,12 +24,29 @@ def process(selection)
   when "3"
     save_students
   when "4"
-    load_students
+    try_load_students
   when "9"
     exit 
   else
     puts "I don't know what you meant, try again"
   end
+end
+
+def input_students
+  puts "Please enter the name of the students"
+  puts "To finish, just hit return twice"
+  name = STDIN.gets.chomp
+  while !name.empty? do
+    @students << {name: name, cohort: :november}
+    puts "Now we have #{@students.count} students"
+    name = STDIN.gets.chomp
+  end
+end
+
+def show_students
+  print_header
+  print_students_list
+  print_footer
 end
 
 def print_header
@@ -74,8 +74,8 @@ def save_students
   file.close
 end
 
-def load_students
-  file = File.open("students.csv", "r")
+def load_students(filename = "students.csv")
+  file = File.open(filename, "r")
   file.readlines.each do |line| 
   name, cohort = line.chomp.split(',')
     @students << {name: name, cohort: cohort.to_sym}
@@ -83,4 +83,19 @@ def load_students
   file.close
 end
 
+def try_load_students
+  filename = ARGV.first
+  if filename.nil?
+     load_students
+     puts "Loaded #{@students.count} students from 'students.csv'"
+  elsif File.exist?(filename)
+    load_students(filename)
+    puts "Loaded #{@students.count} students from #{filename}"
+  else
+    puts "Sorry, #{filename} doesn't exist."
+    exit
+  end
+end
+
+try_load_students
 interactive_menu
